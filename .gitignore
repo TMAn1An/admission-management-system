@@ -1,0 +1,50 @@
+# PHP specific
+*.log
+*.tmp
+*.cache
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# IDE/Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Temporary files
+temp/
+tmp/
+
+# Log files
+logs/
+*.log
+
+# Database files (if any local database files)
+*.db
+*.sqlite
+*.sqlite3
+
+# Composer dependencies (if using Composer)
+vendor/
+composer.lock
+
+# Node modules (if using any Node.js tools)
+node_modules/
