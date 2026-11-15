@@ -3,9 +3,9 @@
 import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { toMinor } from "@/lib/finance";
+import { nextAdmissionNumber, nextPaymentNumber, withTransaction } from "@/lib/tx";
 import { admissionSchema, parseForm, toDate, type ActionState } from "@/lib/validation";
 
 const toValues = (fd: FormData) => Object.fromEntries([...fd].map(([k, v]) => [k, String(v)]));
@@ -32,9 +32,8 @@ export async function createAdmission(_: ActionState, formData: FormData): Promi
 
   let id: string;
   try {
-    id = await db.$transaction(async (tx) => {
-      // Lock the course row so concurrent admissions cannot exceed its capacity.
-      await tx.$queryRaw`SELECT id FROM "Course" WHERE id = ${courseId} FOR UPDATE`;
+    id = await withTransaction(async (tx) => {
+      // SQLite serialises writers, so the seat count read here cannot go stale before the insert below.
       const course = await tx.course.findUnique({ where: { id: courseId }, include: { _count: { select: { admissions: true } } } });
       if (!course || !course.active) throw new AdmissionError("courseId", "This course is not open for admission");
       if (course.capacity !== null && course._count.admissions >= course.capacity) {
@@ -47,11 +46,11 @@ export async function createAdmission(_: ActionState, formData: FormData): Promi
       if (!student) throw new AdmissionError("studentId", "Student not found");
 
       const admission = await tx.admission.create({
-        data: { studentId, courseId, fee: course.fee, admissionDate: toDate(admissionDate) },
+        data: { number: await nextAdmissionNumber(tx), studentId, courseId, fee: course.fee, admissionDate: toDate(admissionDate) },
       });
       if (initial > 0) {
         await tx.payment.create({
-          data: { admissionId: admission.id, amount: initial, paidOn: toDate(admissionDate), method, receivedById: user.id },
+          data: { number: await nextPaymentNumber(tx), admissionId: admission.id, amount: initial, paidOn: toDate(admissionDate), method, receivedById: user.id },
         });
       }
       return admission.id;

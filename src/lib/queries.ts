@@ -25,8 +25,8 @@ export function admissionWhere(f: AdmissionFilters): Prisma.AdmissionWhereInput 
   if (q) {
     const num = q.replace(/^adm-?/i, "");
     where.OR = [
-      { student: { name: { contains: q, mode: "insensitive" } } },
-      { student: { email: { contains: q, mode: "insensitive" } } },
+      { student: { name: { contains: q } } },
+      { student: { email: { contains: q } } },
       { student: { phone: { contains: q } } },
       ...(/^\d+$/.test(num) ? [{ number: Number(num) }] : []),
     ];

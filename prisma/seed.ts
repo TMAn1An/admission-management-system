@@ -1,7 +1,10 @@
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
+import { PrismaLibSQL } from "@prisma/adapter-libsql";
 
-const db = new PrismaClient();
+const db = new PrismaClient({
+  adapter: new PrismaLibSQL({ url: process.env.DATABASE_URL ?? "", authToken: process.env.DATABASE_AUTH_TOKEN || undefined }),
+});
 const day = (s: string) => new Date(`${s}T00:00:00.000Z`);
 
 async function main() {
@@ -48,9 +51,11 @@ async function main() {
   const charlie = await student("Mitu Akter", "mitu.akter@example.com", "+8801711000003", "78 Zindabazar, Sylhet", "2003-03-22");
   await student("Rafiq Islam", "rafiq.islam@example.com", "+8801711000004", "22 Rajshahi Cantonment, Rajshahi", "2002-08-02");
 
+  let admissionSeq = 0;
+  let paymentSeq = 0;
   const admit = async (studentId: string, courseId: string, fee: number, date: string, paid: [number, string, "CASH" | "CARD" | "ONLINE" | "CHEQUE"][]) => {
-    const a = await db.admission.create({ data: { studentId, courseId, fee, admissionDate: day(date) } });
-    for (const [amount, paidOn, method] of paid) await db.payment.create({ data: { admissionId: a.id, amount, paidOn: day(paidOn), method } });
+    const a = await db.admission.create({ data: { number: ++admissionSeq, studentId, courseId, fee, admissionDate: day(date) } });
+    for (const [amount, paidOn, method] of paid) await db.payment.create({ data: { number: ++paymentSeq, admissionId: a.id, amount, paidOn: day(paidOn), method } });
   };
   await admit(alice.id, bcs.id, 50000, "2025-06-01", [[50000, "2025-06-01", "ONLINE"]]);
   await admit(bob.id, mca.id, 35000, "2025-06-15", [[20000, "2025-06-15", "CARD"]]);
