@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { toggleUserActive } from "@/actions/users";
 import { UserForm } from "@/components/user-form";
+import Link from "next/link";
 import { Badge, Card, CardHeader, PageHeader, Table, Td, Th, buttonClass } from "@/components/ui";
 import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
@@ -27,9 +28,12 @@ export default async function Users() {
                 <Td>{u.active ? <Badge tone="green">Active</Badge> : <Badge>Deactivated</Badge>}</Td>
                 <Td className="text-right">
                   {u.id !== me.id && (
-                    <form action={toggleUserActive.bind(null, u.id)}>
-                      <button className={buttonClass(u.active ? "danger" : "secondary", "sm")}>{u.active ? "Deactivate" : "Reactivate"}</button>
-                    </form>
+                    <div className="flex justify-end gap-2">
+                      <Link href={`/users/${u.id}/password`} className={buttonClass("secondary", "sm")}>Reset password</Link>
+                      <form action={toggleUserActive.bind(null, u.id)}>
+                        <button className={buttonClass(u.active ? "danger" : "secondary", "sm")}>{u.active ? "Deactivate" : "Reactivate"}</button>
+                      </form>
+                    </div>
                   )}
                 </Td>
               </tr>

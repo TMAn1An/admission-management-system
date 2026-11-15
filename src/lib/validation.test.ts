@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { courseSchema, paymentSchema, studentSchema, userSchema } from "./validation";
+import { changePasswordSchema, courseSchema, paymentSchema, studentSchema, userSchema } from "./validation";
 
 const student = { name: "Ayesha Rahman", email: " Ayesha@Example.com ", phone: "+8801711000001", address: "Dhaka", dob: "2002-05-15" };
 
@@ -43,5 +43,15 @@ describe("userSchema", () => {
     const u = { name: "A", email: "a@b.co", password: "short", role: "STAFF" };
     expect(userSchema.safeParse(u).success).toBe(false);
     expect(userSchema.safeParse({ ...u, password: "long-enough-pw" }).success).toBe(true);
+  });
+});
+
+describe("changePasswordSchema", () => {
+  const ok = { currentPassword: "old-password-1", newPassword: "brand-new-pass-9", confirmPassword: "brand-new-pass-9" };
+  it("accepts a valid change", () => expect(changePasswordSchema.safeParse(ok).success).toBe(true));
+  it("rejects short, mismatched and unchanged passwords", () => {
+    expect(changePasswordSchema.safeParse({ ...ok, newPassword: "short", confirmPassword: "short" }).success).toBe(false);
+    expect(changePasswordSchema.safeParse({ ...ok, confirmPassword: "different-pass-9" }).success).toBe(false);
+    expect(changePasswordSchema.safeParse({ ...ok, newPassword: ok.currentPassword, confirmPassword: ok.currentPassword }).success).toBe(false);
   });
 });

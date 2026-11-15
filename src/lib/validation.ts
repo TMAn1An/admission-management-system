@@ -60,6 +60,19 @@ export const userSchema = z.object({
   role: z.enum(["ADMIN", "STAFF"]),
 });
 
+const newPassword = z.string().min(10, "Use at least 10 characters").max(100, "Password is too long");
+
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, "Enter your current password"),
+    newPassword,
+    confirmPassword: z.string().min(1, "Repeat the new password"),
+  })
+  .refine((v) => v.newPassword === v.confirmPassword, { path: ["confirmPassword"], message: "Passwords do not match" })
+  .refine((v) => v.newPassword !== v.currentPassword, { path: ["newPassword"], message: "Choose a password different from the current one" });
+
+export const resetPasswordSchema = z.object({ newPassword });
+
 export const loginSchema = z.object({
   email: z.string().trim().toLowerCase().email("Enter a valid email address"),
   password: z.string().min(1, "Enter your password"),
@@ -79,8 +92,7 @@ export function parseForm<S extends z.ZodType>(schema: S, formData: FormData) {
   const result = schema.safeParse(raw);
   if (result.success) return { data: result.data as z.output<S> };
   const { fieldErrors } = z.flattenError(result.error);
-  const { password: _p, ...values } = raw;
-  void _p;
+  const values = Object.fromEntries(Object.entries(raw).filter(([k]) => !/password/i.test(k)));
   return {
     error: {
       message: "Please fix the highlighted fields.",

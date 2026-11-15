@@ -6,9 +6,9 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const session = await verifySession(request.cookies.get(SESSION_COOKIE)?.value);
 
-  if (pathname === "/login") {
-    return session ? NextResponse.redirect(new URL("/", request.url)) : NextResponse.next();
-  }
+  // /login is always reachable: a cookie can have a valid signature but a revoked version, which only the database knows.
+  // The login page itself redirects away when the visitor really is signed in.
+  if (pathname === "/login") return NextResponse.next();
   if (!session) {
     if (pathname.startsWith("/api/")) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const url = new URL("/login", request.url);

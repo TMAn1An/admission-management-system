@@ -29,6 +29,8 @@ model User {
   passwordHash String
   role         Role      @default(STAFF)
   active       Boolean   @default(true)
+  /// Bumped on every password change/reset; sessions signed with an older value are rejected.
+  tokenVersion Int       @default(0)
   createdAt    DateTime  @default(now())
   payments     Payment[]
 }

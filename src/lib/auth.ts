@@ -11,9 +11,10 @@ export const getCurrentUser = cache(async () => {
   if (!session) return null;
   const user = await db.user.findUnique({
     where: { id: session.sub },
-    select: { id: true, name: true, email: true, role: true, active: true },
+    select: { id: true, name: true, email: true, role: true, active: true, tokenVersion: true },
   });
-  return user?.active ? user : null;
+  // A password change bumps tokenVersion, which signs out every other device.
+  return user?.active && user.tokenVersion === session.v ? user : null;
 });
 
 export async function requireUser() {
@@ -28,8 +29,8 @@ export async function requireAdmin() {
   return user;
 }
 
-export async function startSession(user: { id: string; role: "ADMIN" | "STAFF" }) {
-  const token = await signSession({ sub: user.id, role: user.role });
+export async function startSession(user: { id: string; role: "ADMIN" | "STAFF"; tokenVersion: number }) {
+  const token = await signSession({ sub: user.id, role: user.role, v: user.tokenVersion });
   const store = await cookies();
   store.set(SESSION_COOKIE, token, {
     httpOnly: true,

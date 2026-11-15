@@ -58,13 +58,18 @@ export function AppShell({ user, children }: { user: { name: string; email: stri
 
   const account = (
     <div className="border-t border-slate-200 p-4">
-      <div className="flex items-center gap-3">
+      <Link
+        href="/account"
+        onClick={() => setOpen(false)}
+        aria-current={pathname === "/account" ? "page" : undefined}
+        className={clsx("-m-2 flex items-center gap-3 rounded-lg p-2 hover:bg-slate-100", pathname === "/account" && "bg-brand-50")}
+      >
         <span className="grid size-9 shrink-0 place-items-center rounded-full bg-slate-200 text-xs font-semibold text-slate-700">{initials(user.name)}</span>
         <div className="min-w-0">
           <p className="truncate text-sm font-medium text-slate-900">{user.name}</p>
-          <p className="truncate text-xs text-slate-500">{user.role === "ADMIN" ? "Administrator" : "Staff"}</p>
+          <p className="truncate text-xs text-slate-500">{user.role === "ADMIN" ? "Administrator" : "Staff"} · Account</p>
         </div>
-      </div>
+      </Link>
       <form action={logout} className="mt-3">
         <button className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-100">
           <LogOut className="size-4" aria-hidden="true" /> Sign out
