@@ -7,6 +7,9 @@ import { createClient } from "@libsql/client";
 import { readdirSync, readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
+// Local convenience: pick up .env when present (on Vercel / CI the variables are already set).
+if (existsSync(".env")) process.loadEnvFile(".env");
+
 async function main() {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error("DATABASE_URL is not set.");

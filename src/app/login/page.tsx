@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { GraduationCap } from "lucide-react";
 import { login } from "@/actions/auth";
 import { ActionForm, SubmitButton, TextField } from "@/components/form";
+import { getCurrentUser } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Sign in" };
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
   const { next } = await searchParams;
+  if (await getCurrentUser()) redirect("/");
   return (
     <div className="grid min-h-screen lg:grid-cols-2">
       <div className="hidden flex-col justify-between bg-gradient-to-br from-brand-700 to-brand-900 p-12 text-white lg:flex">

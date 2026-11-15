@@ -7,6 +7,7 @@ A secure, modern web app for running an institution's admission desk: register s
 ## Features
 
 - **Staff sign-in with roles** — Administrators manage courses and team members; Staff handle students, admissions and payments.
+- **Password management** — everyone can change their own password (**My account**); administrators can reset a team member's password. Either action signs the affected user out on every other device.
 - **Students** — register, edit, search by name/email/phone, see each student's admissions and balances.
 - **Courses & departments** — fees, duration, optional seat capacity; close/reopen courses without losing history.
 - **Admissions** — one admission per student per course, seat limits enforced, fee locked at admission time, optional first payment.
@@ -100,6 +101,6 @@ The original PHP code remains available in the git history.
 ## Known limitations / next steps
 
 - Login has no brute-force throttling yet; put the app behind your platform's rate limiting or add a store-backed limiter.
-- Passwords are set by administrators (no self-service reset or email delivery yet).
+- A user who forgets their password needs an administrator to reset it (no email-based self-service reset yet). If the only administrator is locked out, re-run the seed with a new `SEED_ADMIN_PASSWORD` is **not** enough because existing admins are kept; update the row directly or add a second administrator in advance.
 - Single currency (BDT, ৳) and English-only UI.
 - Course/department deletion and student archiving are intentionally not offered; add soft-delete if you need it.
