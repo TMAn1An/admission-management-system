@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  STAFF
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  ONLINE
+  CHEQUE
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String
+  role         Role      @default(STAFF)
+  active       Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  payments     Payment[]
+}
+
+model Department {
+  id      String   @id @default(cuid())
+  name    String   @unique
+  head    String?
+  courses Course[]
+}
+
+model Course {
+  id           String      @id @default(cuid())
+  name         String      @unique
+  duration     String
+  fee          Decimal     @db.Decimal(12, 2)
+  capacity     Int?
+  active       Boolean     @default(true)
+  departmentId String?
+  department   Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  admissions   Admission[]
+  createdAt    DateTime    @default(now())
+}
+
+model Student {
+  id         String      @id @default(cuid())
+  name       String
+  email      String      @unique
+  phone      String
+  address    String
+  dob        DateTime    @db.Date
+  createdAt  DateTime    @default(now())
+  admissions Admission[]
+}
+
+model Admission {
+  id            String    @id @default(cuid())
+  /// Human-friendly sequential number shown on slips and receipts (ADM-000123).
+  number        Int       @unique @default(autoincrement())
+  studentId     String
+  courseId      String
+  student       Student   @relation(fields: [studentId], references: [id], onDelete: Restrict)
+  course        Course    @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  /// Fee agreed at admission time; later course fee changes do not alter it.
+  fee           Decimal   @db.Decimal(12, 2)
+  admissionDate DateTime  @db.Date
+  createdAt     DateTime  @default(now())
+  payments      Payment[]
+
+  @@unique([studentId, courseId])
+  @@index([courseId])
+  @@index([admissionDate])
+}
+
+model Payment {
+  id           String        @id @default(cuid())
+  number       Int           @unique @default(autoincrement())
+  admissionId  String
+  admission    Admission     @relation(fields: [admissionId], references: [id], onDelete: Restrict)
+  amount       Decimal       @db.Decimal(12, 2)
+  paidOn       DateTime      @db.Date
+  method       PaymentMethod @default(CASH)
+  receivedById String?
+  receivedBy   User?         @relation(fields: [receivedById], references: [id], onDelete: SetNull)
+  createdAt    DateTime      @default(now())
+
+  @@index([admissionId])
+}

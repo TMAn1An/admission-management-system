@@ -1,243 +1,105 @@
 # Admission Management System
-## DBMS Course Project
 
-A comprehensive web-based admission management system built with HTML, CSS, JavaScript, PHP, and MySQL. This system provides a beautiful, modern interface for managing student admissions, course information, and payment records.
+A secure, modern web app for running an institution's admission desk: register students, manage courses and seats, confirm admissions, collect fees and print official admission slips.
+
+> Originally a university DBMS course project (PHP + MySQL). Rebuilt as a production-ready application — see [What changed](#what-changed-from-the-original-php-version).
 
 ## Features
 
-### Core Functionality
-- **Student Registration**: Add new students with complete details
-- **Course Management**: Display available courses with detailed information
-- **Admission Processing**: Create new admissions by assigning students to courses
-- **Payment Management**: Record and track student payments
-- **Search & Filter**: Advanced search functionality for admission records
-- **Report Generation**: Printable admission confirmation slips
+- **Staff sign-in with roles** — Administrators manage courses and team members; Staff handle students, admissions and payments.
+- **Students** — register, edit, search by name/email/phone, see each student's admissions and balances.
+- **Courses & departments** — fees, duration, optional seat capacity; close/reopen courses without losing history.
+- **Admissions** — one admission per student per course, seat limits enforced, fee locked at admission time, optional first payment.
+- **Payments** — partial payments, overpayment protection, receipt numbers, per-admission history. Status (Unpaid / Partially paid / Paid in full) is always computed from payments.
+- **Search, filter, export** — filter admissions by text, status, course and date range; export the result to CSV (Excel-safe).
+- **Printable admission slip** with signature areas.
+- **Dashboard** — students, open courses, admissions, fees collected vs outstanding.
+- **Responsive & accessible** — works on phones; keyboard navigable, labelled forms, skip link, reduced reliance on colour alone.
 
-### Database Entities
-1. **Student** (Student_ID, Name, Email, Phone, Address, DOB)
-2. **Course** (Course_ID, Course_Name, Duration, Fees)
-3. **Admission** (Admission_ID, Student_ID, Course_ID, Admission_Date, Payment_Status)
-4. **Payment** (Payment_ID, Admission_ID, Amount, Payment_Date)
-5. **Department** (Dept_ID, Dept_Name, Dept_Head)
+## Tech stack
 
-### User Interface Features
-- **Modern Design**: Clean, professional interface with gradient backgrounds
-- **Responsive Layout**: Works perfectly on desktop, tablet, and mobile devices
-- **Card-based Layout**: Beautiful cards with shadows and hover effects
-- **Smooth Animations**: Subtle animations and transitions
-- **Print-friendly**: Special print styles for admission slips
-- **Status Indicators**: Color-coded payment status badges
-- **Interactive Forms**: Real-time validation and dynamic content loading
+| Layer | Choice |
+|---|---|
+| Framework | Next.js 16 (App Router, Server Components & Server Actions), React 19 |
+| Language | TypeScript (strict) |
+| Database | PostgreSQL via Prisma ORM, with migrations |
+| Styling | Tailwind CSS 4 |
+| Auth | Signed httpOnly session cookie (`jose`), bcrypt password hashes |
+| Validation | Zod, on the server for every mutation |
+| Tests | Vitest |
 
-## Technology Stack
-- **Frontend**: HTML5, CSS3, JavaScript (ES6+)
-- **Backend**: PHP 7.4+
-- **Database**: MySQL 5.7+
-- **Server**: Apache (XAMPP recommended)
-- **Styling**: Custom CSS with modern design patterns
+## Getting started
 
-## Installation & Setup
+Requirements: Node.js 20+ and a PostgreSQL database (Docker Compose file included).
 
-### Prerequisites
-- XAMPP (or similar LAMP/WAMP stack)
-- Web browser (Chrome, Firefox, Safari, Edge)
-- Text editor (optional, for customization)
-
-### Step 1: Download and Setup XAMPP
-1. Download XAMPP from [https://www.apachefriends.org/](https://www.apachefriends.org/)
-2. Install XAMPP and start Apache and MySQL services
-
-### Step 2: Database Setup
-1. Open phpMyAdmin (http://localhost/phpmyadmin)
-2. Import the database structure using `database_setup.sql`
-   - Create a new database named `admission_management`
-   - Import the SQL file or copy and execute the SQL commands
-
-### Step 3: Project Setup
-1. Copy all project files to `C:\xampp\htdocs\TAN\` (or your XAMPP htdocs directory)
-2. Ensure the following directory structure:
-   ```
-   TAN/
-   ├── config/
-   │   └── database.php
-   ├── css/
-   │   └── style.css
-   ├── js/
-   │   └── script.js
-   ├── ajax/
-   │   ├── get_student_details.php
-   │   └── get_course_details.php
-   ├── index.php
-   ├── student_registration.php
-   ├── courses.php
-   ├── admission_form.php
-   ├── payment_entry.php
-   ├── search_admissions.php
-   ├── admission_slip.php
-   └── database_setup.sql
-   ```
-
-### Step 4: Database Configuration
-1. Open `config/database.php`
-2. Update database connection settings if needed:
-   ```php
-   $servername = "localhost";
-   $username = "root";
-   $password = "";
-   $dbname = "admission_management";
-   ```
-
-### Step 5: Access the System
-1. Open your web browser
-2. Navigate to `http://localhost/TAN/`
-3. The system should load with the dashboard page
-
-## System Usage
-
-### 1. Student Registration
-- Navigate to "Student Registration" from the menu
-- Fill in all required student details
-- Submit the form to register a new student
-- Use the generated Student ID for admissions
-
-### 2. Course Management
-- Visit the "Courses" page to view all available courses
-- See course details, fees, and current enrollments
-- Click "Create Admission" to directly create an admission for a course
-
-### 3. Creating Admissions
-- Go to "New Admission" page
-- Select a student and course from dropdowns
-- Set admission date and initial payment status
-- Submit to create the admission record
-
-### 4. Payment Processing
-- Use "Payment Entry" to record student payments
-- Select the admission record
-- Enter payment amount (system validates against remaining balance)
-- Choose payment method and date
-- System automatically updates payment status
-
-### 5. Search & Reports
-- Use "Search Admissions" for advanced filtering
-- Search by student name, ID, course, status, or date range
-- Export results to CSV
-- Generate printable admission slips
-
-### 6. Admission Slips
-- Click "View Slip" for any admission record
-- Professional admission confirmation document
-- Includes all student, course, and payment details
-- Print-optimized layout (Ctrl+P)
-
-## Sample Data
-
-The system comes with sample data including:
-- 4 departments (Computer Science, IT, Electronics, Mechanical)
-- 6 courses with different fees and durations
-- 3 sample students with complete information
-- Sample admission and payment records
-
-## Design Features
-
-### Color Scheme
-- Primary: #667eea to #764ba2 (gradient)
-- Success: #28a745
-- Warning: #ffc107
-- Error: #dc3545
-- Background: Gradient blue-purple theme
-
-### Typography
-- Font Family: Inter (Google Fonts)
-- Clean, modern typography with proper hierarchy
-- Readable font sizes and line heights
-
-### Layout
-- Responsive grid system
-- Card-based design with shadows and hover effects
-- Proper spacing and padding throughout
-- Professional form layouts
-
-### Interactive Elements
-- Hover effects on cards and buttons
-- Smooth transitions and animations
-- Real-time form validation
-- Dynamic content loading
-- Status indicators and badges
-
-## Browser Compatibility
-- Chrome 70+
-- Firefox 65+
-- Safari 12+
-- Edge 79+
-
-## Print Functionality
-- Special print stylesheets for admission slips
-- Professional document layout
-- Signature and seal placeholders
-- Official letterhead design
-
-## Security Features
-- PHP prepared statements to prevent SQL injection
-- Input validation and sanitization
-- XSS prevention through proper output encoding
-- Form validation on both client and server side
-
-## Future Enhancements
-- User authentication system
-- Email notifications
-- Advanced reporting features
-- Dashboard analytics
-- Document upload functionality
-- SMS integration
-
-## Troubleshooting
-
-### Common Issues
-1. **Database Connection Error**: Check XAMPP MySQL service is running
-2. **Permission Issues**: Ensure proper file permissions in htdocs
-3. **Missing Styles**: Verify CSS file path and web server is running
-4. **AJAX Not Working**: Check browser console for JavaScript errors
-
-### Support
-This is a academic project for DBMS course. For issues or customization:
-- Review the code comments
-- Check browser developer tools for errors
-- Verify database connections and queries
-
-## Project Structure
-```
-admission_management/
-├── Database Layer
-│   ├── MySQL database with 5 tables
-│   ├── Foreign key relationships
-│   └── Sample data for testing
-├── Backend (PHP)
-│   ├── Database configuration
-│   ├── CRUD operations
-│   ├── Data validation
-│   └── AJAX endpoints
-├── Frontend (HTML/CSS/JS)
-│   ├── Responsive design
-│   ├── Modern UI components
-│   ├── Interactive forms
-│   └── Print-friendly layouts
-└── Features
-    ├── Student management
-    ├── Course catalog
-    ├── Admission processing
-    ├── Payment tracking
-    └── Report generation
+```bash
+git clone https://github.com/TMAn1An/admission-management-system.git
+cd admission-management-system
+npm install
+cp .env.example .env        # then edit the values
+docker compose up -d        # optional: local PostgreSQL
+npx prisma migrate deploy   # create tables
+npm run db:seed             # create the first admin (+ demo data if SEED_DEMO=true)
+npm run dev                 # http://localhost:3000
 ```
 
-## Academic Context
-This project demonstrates:
-- Database design principles
-- Web development technologies
-- CRUD operations
-- User interface design
-- Data validation and security
-- Report generation
-- Modern web standards
+Sign in with `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` from your `.env`, then add team members under **Team**.
 
-Perfect for DBMS course requirements with practical real-world application.
+### Environment variables
+
+| Name | Purpose |
+|---|---|
+| `DATABASE_URL` | PostgreSQL connection string |
+| `SESSION_SECRET` | ≥ 32 random characters used to sign sessions (`openssl rand -base64 32`) |
+| `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` | First administrator created by the seed script (password ≥ 10 chars) |
+| `SEED_DEMO` | `true` to also load sample departments, courses, students and admissions |
+
+### Scripts
+
+`npm run dev` · `npm run build` · `npm start` · `npm test` · `npm run lint` · `npm run typecheck` · `npm run db:migrate` · `npm run db:deploy` · `npm run db:seed`
+
+## Deploying
+
+**Vercel + managed PostgreSQL (e.g. Neon, Supabase, Vercel Postgres)**
+
+1. Create a PostgreSQL database and copy its connection string.
+2. Import the repository in Vercel and set `DATABASE_URL` and `SESSION_SECRET`.
+3. Run migrations and the seed once against the production database from your machine:
+   ```bash
+   DATABASE_URL="<production url>" npx prisma migrate deploy
+   DATABASE_URL="<production url>" SEED_ADMIN_EMAIL=you@school.edu SEED_ADMIN_PASSWORD="a-long-password" npm run db:seed
+   ```
+4. Deploy. Sign in and change nothing else — do **not** set `SEED_DEMO=true` in production.
+
+Any Node host works too (`npm run build && npm start`) behind HTTPS.
+
+## Design notes
+
+- **Money is exact.** Amounts are `DECIMAL(12,2)` in the database and handled in integer paisa in code.
+- **No stale status.** The old `Payment_Status` column is gone; status is derived from payments.
+- **Concurrency-safe.** Payments and admissions run in transactions that lock the admission/course row, so two clerks cannot overpay a balance or oversell the last seat.
+- **Fee history is stable.** An admission keeps the fee it was created with, even if the course fee changes later.
+- **Records are protected.** Students, courses and admissions with history cannot be hard-deleted; close courses instead.
+- **Security.** Every page and action re-checks the session and role on the server; Server Actions get built-in origin (CSRF) checks; cookies are `httpOnly`, `sameSite=lax`, `secure` in production; security headers are set; CSV export neutralises spreadsheet formula injection; login does not reveal whether an email exists.
+
+## What changed from the original PHP version
+
+| Before | Now |
+|---|---|
+| Open to anyone, no login | Authenticated staff with Admin/Staff roles |
+| SQL + HTML mixed in every page, nav copied 7× | Typed data layer, validated server actions, shared layout & components |
+| `root` with empty password in code | Configuration through environment variables |
+| Stored, hand-updated payment status | Derived from payments; fee snapshot per admission |
+| Payment race conditions possible | Transactional row locking |
+| Course/department data only editable in SQL | Admin UI for courses and departments |
+| No pagination, no tests, no CI | Pagination, unit tests, GitHub Actions CI |
+| Desktop-oriented gradient UI | Clean responsive UI, mobile menu, print stylesheet |
+
+The original PHP code remains available in the git history.
+
+## Known limitations / next steps
+
+- Login has no brute-force throttling yet; put the app behind your platform's rate limiting or add a store-backed limiter.
+- Passwords are set by administrators (no self-service reset or email delivery yet).
+- Single currency (BDT, ৳) and English-only UI.
+- Course/department deletion and student archiving are intentionally not offered; add soft-delete if you need it.
