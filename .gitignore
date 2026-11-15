@@ -10,3 +10,8 @@ next-env.d.ts
 .vercel
 .DS_Store
 *.log
+
+# local SQLite
+*.db
+*.db-journal
+prisma/dev.db*

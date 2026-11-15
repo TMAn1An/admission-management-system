@@ -1,9 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
 import { formatMoney, toMinor } from "@/lib/finance";
+import { nextPaymentNumber, withTransaction } from "@/lib/tx";
 import { paymentSchema, parseForm, toDate, type ActionState } from "@/lib/validation";
 
 export async function recordPayment(_: ActionState, formData: FormData): Promise<ActionState> {
@@ -12,9 +12,8 @@ export async function recordPayment(_: ActionState, formData: FormData): Promise
   if (parsed.error) return parsed.error;
   const { admissionId, amount, paidOn, method } = parsed.data;
 
-  const outcome: { error?: string } = await db.$transaction(async (tx): Promise<{ error?: string }> => {
-    // Serialize payments per admission so two clerks cannot both overpay the same balance.
-    await tx.$queryRaw`SELECT id FROM "Admission" WHERE id = ${admissionId} FOR UPDATE`;
+  const outcome: { error?: string } = await withTransaction(async (tx): Promise<{ error?: string }> => {
+    // SQLite serialises writers: if another clerk commits first, this transaction fails and is retried on fresh data.
     const admission = await tx.admission.findUnique({ where: { id: admissionId }, select: { fee: true } });
     if (!admission) return { error: "Admission not found." };
 
@@ -25,7 +24,7 @@ export async function recordPayment(_: ActionState, formData: FormData): Promise
       return { error: `Amount exceeds the remaining balance of ${formatMoney(remaining / 100)}.` };
     }
     await tx.payment.create({
-      data: { admissionId, amount, paidOn: toDate(paidOn), method, receivedById: user.id },
+      data: { number: await nextPaymentNumber(tx), admissionId, amount, paidOn: toDate(paidOn), method, receivedById: user.id },
     });
     return {};
   });

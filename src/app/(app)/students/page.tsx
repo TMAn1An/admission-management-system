@@ -14,7 +14,7 @@ export default async function Students({ searchParams }: { searchParams: Promise
   const page = Math.max(Number(pageRaw) || 1, 1);
   const term = q.trim();
   const where = term
-    ? { OR: [{ name: { contains: term, mode: "insensitive" as const } }, { email: { contains: term, mode: "insensitive" as const } }, { phone: { contains: term } }] }
+    ? { OR: [{ name: { contains: term } }, { email: { contains: term } }, { phone: { contains: term } }] }
     : {};
   const [students, total] = await Promise.all([
     db.student.findMany({ where, orderBy: { createdAt: "desc" }, skip: (page - 1) * PAGE_SIZE, take: PAGE_SIZE, include: { _count: { select: { admissions: true } } } }),
