@@ -101,6 +101,6 @@ The original PHP code remains available in the git history.
 ## Known limitations / next steps
 
 - Login has no brute-force throttling yet; put the app behind your platform's rate limiting or add a store-backed limiter.
-- A user who forgets their password needs an administrator to reset it (no email-based self-service reset yet). If the only administrator is locked out, re-run the seed with a new `SEED_ADMIN_PASSWORD` is **not** enough because existing admins are kept; update the row directly or add a second administrator in advance.
+- A user who forgets their password needs an administrator to reset it (no email-based reset yet). Keep at least two administrators so one can always reset the other's password.
 - Single currency (BDT, ৳) and English-only UI.
 - Course/department deletion and student archiving are intentionally not offered; add soft-delete if you need it.
