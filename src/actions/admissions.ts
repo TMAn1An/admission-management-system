@@ -4,8 +4,8 @@ import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
-import { toMinor } from "@/lib/finance";
-import { nextAdmissionNumber, nextPaymentNumber, withTransaction } from "@/lib/tx";
+import { AdmissionError, admitStudent } from "@/lib/admit";
+import { withTransaction } from "@/lib/tx";
 import { admissionSchema, parseForm, toDate, type ActionState } from "@/lib/validation";
 
 const toValues = (fd: FormData) => Object.fromEntries([...fd].map(([k, v]) => [k, String(v)]));
@@ -32,29 +32,9 @@ export async function createAdmission(_: ActionState, formData: FormData): Promi
 
   let id: string;
   try {
-    id = await withTransaction(async (tx) => {
-      // SQLite serialises writers, so the seat count read here cannot go stale before the insert below.
-      const course = await tx.course.findUnique({ where: { id: courseId }, include: { _count: { select: { admissions: true } } } });
-      if (!course || !course.active) throw new AdmissionError("courseId", "This course is not open for admission");
-      if (course.capacity !== null && course._count.admissions >= course.capacity) {
-        throw new AdmissionError("courseId", "This course has no seats left");
-      }
-      if (toMinor(initial) > toMinor(course.fee)) {
-        throw new AdmissionError("initialPayment", "Initial payment is more than the course fee");
-      }
-      const student = await tx.student.findUnique({ where: { id: studentId }, select: { id: true } });
-      if (!student) throw new AdmissionError("studentId", "Student not found");
-
-      const admission = await tx.admission.create({
-        data: { number: await nextAdmissionNumber(tx), studentId, courseId, fee: course.fee, admissionDate: toDate(admissionDate) },
-      });
-      if (initial > 0) {
-        await tx.payment.create({
-          data: { number: await nextPaymentNumber(tx), admissionId: admission.id, amount: initial, paidOn: toDate(admissionDate), method, receivedById: user.id },
-        });
-      }
-      return admission.id;
-    });
+    id = await withTransaction((tx) =>
+      admitStudent(tx, { studentId, courseId, date: toDate(admissionDate), initialPayment: initial, method, receivedById: user.id }),
+    );
   } catch (e) {
     if (e instanceof AdmissionError) return fail(e.field, e.message);
     if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
@@ -64,15 +44,6 @@ export async function createAdmission(_: ActionState, formData: FormData): Promi
   }
 
   revalidatePath("/admissions");
-  revalidatePath("/");
+  revalidatePath("/dashboard");
   redirect(`/admissions/${id}?created=1`);
-}
-
-class AdmissionError extends Error {
-  constructor(
-    public field: string,
-    message: string,
-  ) {
-    super(message);
-  }
 }

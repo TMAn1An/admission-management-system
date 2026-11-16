@@ -4,9 +4,24 @@ A secure, modern web app for running an institution's admission desk: register s
 
 > Originally a university DBMS course project (PHP + MySQL). Rebuilt as a production-ready application — see [What changed](#what-changed-from-the-original-php-version).
 
+## Two sides, one system
+
+- **Applicant portal (public, no login)** — browse open courses, apply online, track the application, see the admission slip and pay fees online.
+- **Staff workspace (login)** — review applications, register students, manage courses, record payments, search and export.
+
 ## Features
 
+### Applicant portal
+- **Online application** — one short form; the applicant gets an application number (`APP-000123`).
+- **Status page** — number + email unlocks a 30-minute private view: decision, admission slip, payments and balance. Wrong number and wrong email give the same answer, so numbers cannot be probed.
+- **Online payment** — pay the balance (in full or in instalments) through SSLCommerz (bKash, Nagad, cards). Payments are re-validated with the gateway before crediting and can never be credited twice.
+- **Spam protection** — hidden honeypot field, minimum fill time, per-IP rate limits.
+
+### Staff workspace
+- **Applications inbox** — approve (creates the student and the admission in one step, respecting seats) or reject with a reason; the applicant is emailed.
+
 - **Staff sign-in with roles** — Administrators manage courses and team members; Staff handle students, admissions and payments.
+- **Brute-force protection** — logins are throttled (5 failures per email / 20 per IP per 15 minutes).
 - **Password management** — everyone can change their own password (**My account**); administrators can reset a team member's password. Either action signs the affected user out on every other device.
 - **Students** — register, edit, search by name/email/phone, see each student's admissions and balances.
 - **Courses & departments** — fees, duration, optional seat capacity; close/reopen courses without losing history.
@@ -51,9 +66,27 @@ Sign in with `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` from your `.env`, then a
 |---|---|
 | `DATABASE_URL` | `file:./dev.db` locally, or your Turso URL (`libsql://…`) |
 | `DATABASE_AUTH_TOKEN` | Turso database token (not needed for local files) |
-| `SESSION_SECRET` | ≥ 32 random characters used to sign sessions (`openssl rand -base64 32`) |
+| `SESSION_SECRET` | ≥ 32 random characters used to sign sessions and tokens (`openssl rand -base64 32`) |
 | `SEED_ADMIN_EMAIL`, `SEED_ADMIN_PASSWORD` | First administrator created by the seed script (password ≥ 10 chars) |
 | `SEED_DEMO` | `true` to also load sample departments, courses, students and admissions |
+| `INSTITUTION_NAME` | Name shown on the public pages and in emails |
+| `APP_URL` | Public URL for links in emails and payment callbacks (auto-detected on Vercel) |
+| `RESEND_API_KEY`, `MAIL_FROM` | *Optional.* Enables emails and "Forgot password" |
+| `SSLCOMMERZ_STORE_ID`, `SSLCOMMERZ_STORE_PASSWORD`, `SSLCOMMERZ_LIVE` | *Optional.* Enables online payment (`SSLCOMMERZ_LIVE=true` only with live keys) |
+| `PAYMENT_MOCK`, `MAIL_TRANSPORT=log` | Development only: simulated gateway page and emails printed to the log. Ignored in production. |
+
+Optional integrations switch themselves off cleanly: without mail keys no emails are sent and the "Forgot password" link is hidden; without gateway keys the status page tells applicants to pay at the office.
+
+### Enabling email (Resend)
+1. Create an account at [resend.com](https://resend.com), verify your sending domain and create an API key.
+2. In Vercel set `RESEND_API_KEY` and `MAIL_FROM` (for example `Admissions <admissions@your-domain.com>`), then redeploy.
+
+### Enabling online payment (SSLCommerz)
+1. Sign up at [sslcommerz.com](https://www.sslcommerz.com) (sandbox keys: [developer.sslcommerz.com](https://developer.sslcommerz.com)).
+2. Set `SSLCOMMERZ_STORE_ID` and `SSLCOMMERZ_STORE_PASSWORD` in Vercel. Test in the sandbox first, then switch to live keys and set `SSLCOMMERZ_LIVE=true`.
+3. Callback and IPN URLs are sent with every payment (`/api/pay/sslcommerz/{success,fail,cancel,ipn}`); nothing needs to be configured in the SSLCommerz panel beyond enabling IPN if you want server-to-server confirmation.
+
+> The gateway integration follows SSLCommerz's documented session-create and validation APIs and is covered by unit tests and a simulated-gateway end-to-end test, but it has **not** been exercised against SSLCommerz's live sandbox in this repository. Run one sandbox payment before going live.
 
 ### Scripts
 
@@ -100,7 +133,8 @@ The original PHP code remains available in the git history.
 
 ## Known limitations / next steps
 
-- Login has no brute-force throttling yet; put the app behind your platform's rate limiting or add a store-backed limiter.
-- A user who forgets their password needs an administrator to reset it (no email-based reset yet). Keep at least two administrators so one can always reset the other's password.
+- A user who forgets their password needs an administrator to reset it (email reset works once `RESEND_API_KEY` is configured). Keep at least two administrators so one can always reset the other's password.
 - Single currency (BDT, ৳) and English-only UI.
+- Applicants cannot edit or withdraw an application after submitting; staff handle that.
+- Rate limiting is a fixed window stored in the database — good for abuse prevention, not a substitute for a WAF under a determined attack.
 - Course/department deletion and student archiving are intentionally not offered; add soft-delete if you need it.

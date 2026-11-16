@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { changePasswordSchema, courseSchema, paymentSchema, studentSchema, userSchema } from "./validation";
+import { applicationSchema, changePasswordSchema, courseSchema, lookupSchema, paymentSchema, studentSchema, userSchema } from "./validation";
 
 const student = { name: "Ayesha Rahman", email: " Ayesha@Example.com ", phone: "+8801711000001", address: "Dhaka", dob: "2002-05-15" };
 
@@ -53,5 +53,30 @@ describe("changePasswordSchema", () => {
     expect(changePasswordSchema.safeParse({ ...ok, newPassword: "short", confirmPassword: "short" }).success).toBe(false);
     expect(changePasswordSchema.safeParse({ ...ok, confirmPassword: "different-pass-9" }).success).toBe(false);
     expect(changePasswordSchema.safeParse({ ...ok, newPassword: ok.currentPassword, confirmPassword: ok.currentPassword }).success).toBe(false);
+  });
+});
+
+describe("lookupSchema", () => {
+  it("accepts APP-000123, app123 and 123, normalising to the number", () => {
+    for (const ref of ["APP-000123", "app123", "123", " APP-123 "]) {
+      const r = lookupSchema.safeParse({ ref, email: "A@B.co" });
+      expect(r.success && [r.data.ref, r.data.email]).toEqual([123, "a@b.co"]);
+    }
+  });
+  it("rejects malformed references and emails", () => {
+    expect(lookupSchema.safeParse({ ref: "abc", email: "a@b.co" }).success).toBe(false);
+    expect(lookupSchema.safeParse({ ref: "1; DROP", email: "a@b.co" }).success).toBe(false);
+    expect(lookupSchema.safeParse({ ref: "1", email: "nope" }).success).toBe(false);
+  });
+});
+
+describe("applicationSchema", () => {
+  const base = { name: "Nadia", email: "n@x.co", phone: "+8801711222333", address: "Dhaka", dob: "2003-02-14", courseId: "c1" };
+  it("accepts a normal application and defaults optional fields", () => {
+    const r = applicationSchema.safeParse(base);
+    expect(r.success && [r.data.message, r.data.website]).toEqual(["", ""]);
+  });
+  it("rejects a filled honeypot field", () => {
+    expect(applicationSchema.safeParse({ ...base, website: "http://spam" }).success).toBe(false);
   });
 });

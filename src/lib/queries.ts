@@ -78,18 +78,20 @@ export async function getAdmission(id: string) {
 }
 
 export async function getDashboard() {
-  const [students, courses, admissions, payments, recent, allAdmissions] = await Promise.all([
+  const [students, courses, admissions, payments, recent, allAdmissions, pendingApplications] = await Promise.all([
+    // computed below
     db.student.count(),
     db.course.count({ where: { active: true } }),
     db.admission.count(),
     db.payment.aggregate({ _sum: { amount: true } }),
     db.admission.findMany({ include: admissionInclude, orderBy: { createdAt: "desc" }, take: 6 }),
     db.admission.findMany({ select: { fee: true, payments: { select: { amount: true } } } }),
+    db.application.count({ where: { status: "PENDING" } }),
   ]);
   const decorated = allAdmissions.map(decorate);
   const billed = sumDecimals(allAdmissions.map((a) => a.fee));
   const collected = Number(payments._sum.amount ?? 0);
   const byStatus = { PENDING: 0, PARTIAL: 0, PAID: 0 } satisfies Record<PaymentStatus, number>;
   for (const a of decorated) byStatus[a.status]++;
-  return { students, courses, admissions, billed, collected, outstanding: Math.max(billed - collected, 0), byStatus, recent: recent.map(decorate) };
+  return { pendingApplications, students, courses, admissions, billed, collected, outstanding: Math.max(billed - collected, 0), byStatus, recent: recent.map(decorate) };
 }

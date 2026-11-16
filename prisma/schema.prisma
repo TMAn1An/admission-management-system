@@ -33,6 +33,7 @@ model User {
   tokenVersion Int       @default(0)
   createdAt    DateTime  @default(now())
   payments     Payment[]
+  resetTokens  PasswordResetToken[]
 }
 
 model Department {
@@ -52,6 +53,7 @@ model Course {
   departmentId String?
   department   Department? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
   admissions   Admission[]
+  applications Application[]
   createdAt    DateTime    @default(now())
 }
 
@@ -79,6 +81,7 @@ model Admission {
   admissionDate DateTime
   createdAt     DateTime  @default(now())
   payments      Payment[]
+  attempts      PaymentAttempt[]
 
   @@unique([studentId, courseId])
   @@index([courseId])
@@ -94,8 +97,83 @@ model Payment {
   paidOn       DateTime
   method       PaymentMethod @default(CASH)
   receivedById String?
+  /// Gateway transaction id for online payments; unique so a callback can never credit twice.
+  reference    String?       @unique
   receivedBy   User?         @relation(fields: [receivedById], references: [id], onDelete: SetNull)
   createdAt    DateTime      @default(now())
 
   @@index([admissionId])
+}
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum AttemptStatus {
+  INITIATED
+  PAID
+  FAILED
+  CANCELLED
+}
+
+/// An online application submitted by a prospective student, reviewed by staff.
+model Application {
+  id           String            @id @default(cuid())
+  number       Int               @unique
+  name         String
+  email        String
+  phone        String
+  address      String
+  dob          DateTime
+  courseId     String
+  course       Course            @relation(fields: [courseId], references: [id], onDelete: Restrict)
+  message      String?
+  status       ApplicationStatus @default(PENDING)
+  reviewNote   String?
+  reviewedById String?
+  reviewedAt   DateTime?
+  studentId    String?
+  admissionId  String?
+  createdAt    DateTime          @default(now())
+
+  @@index([status])
+  @@index([email])
+}
+
+/// One attempt to pay an admission's balance through the online gateway.
+model PaymentAttempt {
+  id          String        @id @default(cuid())
+  tranId      String        @unique
+  admissionId String
+  admission   Admission     @relation(fields: [admissionId], references: [id], onDelete: Restrict)
+  amount      Decimal
+  payerEmail  String
+  status      AttemptStatus @default(INITIATED)
+  gatewayRef  String?
+  note        String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([admissionId])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
+
+/// Fixed-window counters for throttling logins, applications and lookups (works on serverless).
+model RateLimit {
+  key     String   @id
+  count   Int
+  resetAt DateTime
 }

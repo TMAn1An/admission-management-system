@@ -34,6 +34,6 @@ export async function recordPayment(_: ActionState, formData: FormData): Promise
   }
   revalidatePath(`/admissions/${admissionId}`);
   revalidatePath("/admissions");
-  revalidatePath("/");
+  revalidatePath("/dashboard");
   return { ok: true, message: "Payment recorded." };
 }

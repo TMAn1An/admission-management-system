@@ -28,3 +28,8 @@ export async function nextPaymentNumber(tx: Tx): Promise<number> {
   const { _max } = await tx.payment.aggregate({ _max: { number: true } });
   return (_max.number ?? 0) + 1;
 }
+
+export async function nextApplicationNumber(tx: Tx): Promise<number> {
+  const { _max } = await tx.application.aggregate({ _max: { number: true } });
+  return (_max.number ?? 0) + 1;
+}
