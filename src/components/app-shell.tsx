@@ -4,27 +4,28 @@ import clsx from "clsx";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
-import { BookOpen, ClipboardList, GraduationCap, LayoutDashboard, LogOut, Menu, UserCog, Users, X } from "lucide-react";
+import { BookOpen, ClipboardList, Inbox, GraduationCap, LayoutDashboard, LogOut, Menu, UserCog, Users, X } from "lucide-react";
 import { logout } from "@/actions/auth";
 import { initials } from "@/lib/format";
 
 const NAV = [
-  { href: "/", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/students", label: "Students", icon: Users },
   { href: "/courses", label: "Courses", icon: BookOpen },
+  { href: "/applications", label: "Applications", icon: Inbox, badge: true },
   { href: "/admissions", label: "Admissions", icon: ClipboardList },
   { href: "/users", label: "Team", icon: UserCog, adminOnly: true },
 ];
 
-export function AppShell({ user, children }: { user: { name: string; email: string; role: "ADMIN" | "STAFF" }; children: ReactNode }) {
+export function AppShell({ user, pending, children }: { user: { name: string; email: string; role: "ADMIN" | "STAFF" }; pending: number; children: ReactNode }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const items = NAV.filter((i) => !i.adminOnly || user.role === "ADMIN");
 
   const nav = (
     <nav aria-label="Main" className="flex-1 space-y-1 px-3 py-4">
-      {items.map(({ href, label, icon: Icon }) => {
-        const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
+      {items.map(({ href, label, icon: Icon, badge }) => {
+        const active = pathname.startsWith(href);
         return (
           <Link
             key={href}
@@ -37,7 +38,8 @@ export function AppShell({ user, children }: { user: { name: string; email: stri
             )}
           >
             <Icon className="size-5" aria-hidden="true" />
-            {label}
+            <span className="flex-1">{label}</span>
+            {badge && pending > 0 && <span className="rounded-full bg-brand-600 px-2 py-0.5 text-xs font-semibold text-white" aria-label={`${pending} pending`}>{pending}</span>}
           </Link>
         );
       })}
@@ -45,7 +47,7 @@ export function AppShell({ user, children }: { user: { name: string; email: stri
   );
 
   const brand = (
-    <Link href="/" className="flex items-center gap-2.5 px-5 py-5">
+    <Link href="/dashboard" className="flex items-center gap-2.5 px-5 py-5">
       <span className="grid size-9 place-items-center rounded-lg bg-brand-600 text-white">
         <GraduationCap className="size-5" aria-hidden="true" />
       </span>
@@ -87,7 +89,7 @@ export function AppShell({ user, children }: { user: { name: string; email: stri
       </aside>
 
       <header className="no-print sticky top-0 z-30 flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 lg:hidden">
-        <Link href="/" className="flex items-center gap-2 text-sm font-semibold">
+        <Link href="/dashboard" className="flex items-center gap-2 text-sm font-semibold">
           <GraduationCap className="size-5 text-brand-600" aria-hidden="true" /> Admissions
         </Link>
         <button onClick={() => setOpen(true)} aria-label="Open menu" className="rounded-lg p-2 hover:bg-slate-100">

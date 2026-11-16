@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BookOpen, ClipboardList, Users, Wallet } from "lucide-react";
+import { BookOpen, ClipboardList, Inbox, Users, Wallet } from "lucide-react";
 import { Card, CardHeader, EmptyState, Notice, PageHeader, StatusBadge, Table, Td, Th, ButtonLink } from "@/components/ui";
 import { requireUser } from "@/lib/auth";
 import { admissionNo, formatDate } from "@/lib/format";
@@ -18,6 +18,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   const collectedPct = d.billed > 0 ? Math.round((d.collected / d.billed) * 100) : 0;
 
   const stats = [
+    { label: "Pending applications", value: d.pendingApplications.toLocaleString(), icon: Inbox, href: "/applications" },
     { label: "Students", value: d.students.toLocaleString(), icon: Users },
     { label: "Open courses", value: d.courses.toLocaleString(), icon: BookOpen },
     { label: "Admissions", value: d.admissions.toLocaleString(), icon: ClipboardList },
@@ -38,9 +39,10 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
       />
       {denied && <Notice tone="error">You do not have permission to open that page.</Notice>}
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        {stats.map(({ label, value, icon: Icon }) => (
-          <Card key={label} className="p-5">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5">
+        {stats.map(({ label, value, icon: Icon, href }) => (
+          <Card key={label} className="relative p-5">
+            {href && <Link href={href} className="absolute inset-0 rounded-card" aria-label={`${label}: view`} />}
             <div className="flex items-center justify-between">
               <p className="text-sm text-slate-500">{label}</p>
               <span className="grid size-9 place-items-center rounded-lg bg-brand-50 text-brand-600">

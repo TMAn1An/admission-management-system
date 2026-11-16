@@ -23,6 +23,29 @@ export const studentSchema = z.object({
   }, "Date of birth looks incorrect"),
 });
 
+/** Public online application: same student rules plus a course choice and bot-trap fields. */
+export const applicationSchema = studentSchema.extend({
+  courseId: z.string().min(1, "Choose a course"),
+  message: z.string().trim().max(500, "Keep the note under 500 characters").optional().default(""),
+  website: z.string().max(0).optional().default(""), // honeypot: humans never see or fill this
+  ft: z.string().optional().default(""),
+});
+
+export const lookupSchema = z.object({
+  ref: z
+    .string()
+    .trim()
+    .regex(/^(APP-?)?\d{1,9}$/i, "Enter your application number, for example APP-000123")
+    .transform((v) => Number(v.replace(/\D/g, ""))),
+  email: z.string().trim().toLowerCase().email("Enter the email you applied with"),
+});
+
+export const forgotSchema = z.object({ email: z.string().trim().toLowerCase().email("Enter a valid email address") });
+
+export const onlinePaySchema = z.object({
+  amount: z.coerce.number({ message: "Enter a valid amount" }).positive("Amount must be greater than 0"),
+});
+
 export const courseSchema = z.object({
   name: text("Course name", 150),
   duration: text("Duration", 50),
